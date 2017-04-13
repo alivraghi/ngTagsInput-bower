@@ -2,3 +2,5 @@ Bower repository for ngTagsInput
 
 NOTE: waiting for master mbenford/ngTagsInput original project accepts pull-requests, 
 this is a fork that relies to alivraghi/ngTagsInput 'focus-merge' branch.
+
+Inherits official ngTagsInput v3.1.2 changes.
