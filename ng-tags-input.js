@@ -1,15 +1,13 @@
 /*!
- * ngTagsInput v3.1.2
+ * ngTagsInput v3.2.0
  * http://mbenford.github.io/ngTagsInput
  *
  * Copyright (c) 2013-2017 Michael Benford
  * License: MIT
  *
- * Generated at 2017-04-12 18:20:40 +0200
+ * Generated at 2017-04-19 17:29:41 +0200
  */
 (function() {
-'use strict';
-
 'use strict';
 
 var KEYS = {
@@ -29,8 +27,6 @@ var KEYS = {
 var MAX_SAFE_INTEGER = 9007199254740991;
 var SUPPORTED_INPUT_TYPES = ['text', 'email', 'url'];
 
-'use strict';
-
 var tagsInput = angular.module('ngTagsInput', []);
 
 /**
@@ -42,6 +38,7 @@ var tagsInput = angular.module('ngTagsInput', []);
  * Renders an input box with tag editing support.
  *
  * @param {string} ngModel Assignable Angular expression to data-bind to.
+ * @param {boolean=} [useStrings=false] Flag indicating that the model is an array of strings (EXPERIMENTAL).
  * @param {string=} [template=NA] URL or id of a custom template for rendering each tag.
  * @param {string=} [templateScope=NA] Scope to be passed to custom templates - of both tagsInput and
  *    autoComplete directives - as $scope.
@@ -49,11 +46,11 @@ var tagsInput = angular.module('ngTagsInput', []);
  * @param {string=} [keyProperty=text] Property to be used as a unique identifier for the tag.
  * @param {string=} [type=text] Type of the input element. Only 'text', 'email' and 'url' are supported values.
  * @param {string=} [text=NA] Assignable Angular expression for data-binding to the element's text.
+ * @param {boolean} [validateUntouched=true] Flag indicating that the validation is required on startup.  
  * @param {number=} tabindex Tab order of the control.
  * @param {string} [inputFieldId=NA] Specific ID of the input control (useful when setting focus across multiple inputs 
  *    in a form).
  * @param {number} [inputFieldTabindex=NA] Tab order of the input control; if sepcified overwrite tabindex.
- * @param {boolean} [validateUntouched=true] Flag indicating that the validation is required on startup.  
  * @param {string=} [placeholder=Add a tag] Placeholder text for the control.
  * @param {number=} [minLength=3] Minimum length for a new tag.
  * @param {number=} [maxLength=MAX_SAFE_INTEGER] Maximum length allowed for a new tag.
@@ -187,6 +184,10 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "$q", "tag
             self.index = -1;
         };
 
+        self.getItems = function() {
+            return options.useStrings ? self.items.map(getTagText): self.items;
+        };
+
         self.clearSelection();
 
         return self;
@@ -244,6 +245,7 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "$q", "tag
                 allowLeftoverText: [Boolean, false],
                 addFromAutocompleteOnly: [Boolean, false],
                 spellcheck: [Boolean, true],
+                useStrings: [Boolean, false],
                 validateUntouched: [Boolean, true]
             });
 
@@ -353,6 +355,10 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "$q", "tag
             scope.$watch('tags', function(value) {
                 if (value) {
                     tagList.items = tiUtil.makeObjectArray(value, options.displayProperty);
+                    if (options.useStrings) {
+                        return;
+                    }
+
                     scope.tags = tagList.items;
                 }
                 else {
@@ -429,7 +435,7 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "$q", "tag
                     scope.newTag.text('');
                 })
                 .on('tag-added tag-removed', function() {
-                    scope.tags = tagList.items;
+                    scope.tags = tagList.getItems();
                     // Ideally we should be able call $setViewValue here and let it in turn call $setDirty and $validate
                     // automatically, but since the model is an array, $setViewValue does nothing and it's up to us to do it.
                     // Unfortunately this won't trigger any registered $parser and there's no safe way to do it.
@@ -522,8 +528,6 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "$q", "tag
 }]);
 
 
-'use strict';
-
 /**
  * @ngdoc directive
  * @name tiTagItem
@@ -562,8 +566,6 @@ tagsInput.directive('tiTagItem', ["tiUtil", function(tiUtil) {
     };
 }]);
 
-
-'use strict';
 
 /**
  * @ngdoc directive
@@ -845,8 +847,6 @@ tagsInput.directive('autoComplete', ["$document", "$timeout", "$sce", "$q", "tag
 }]);
 
 
-'use strict';
-
 /**
  * @ngdoc directive
  * @name tiAutocompleteMatch
@@ -885,8 +885,6 @@ tagsInput.directive('tiAutocompleteMatch', ["$sce", "tiUtil", function($sce, tiU
 }]);
 
 
-'use strict';
-
 /**
  * @ngdoc directive
  * @name tiTranscludeAppend
@@ -902,8 +900,6 @@ tagsInput.directive('tiTranscludeAppend', function() {
         });
     };
 });
-
-'use strict';
 
 /**
  * @ngdoc directive
@@ -960,8 +956,6 @@ tagsInput.directive('tiAutosize', ["tagsInputConfig", function(tagsInputConfig) 
     };
 }]);
 
-'use strict';
-
 /**
  * @ngdoc directive
  * @name tiBindAttrs
@@ -979,8 +973,6 @@ tagsInput.directive('tiBindAttrs', function() {
         }, true);
     };
 });
-
-'use strict';
 
 /**
  * @ngdoc service
@@ -1088,8 +1080,6 @@ tagsInput.provider('tagsInputConfig', function() {
     }];
 });
 
-
-'use strict';
 
 /***
  * @ngdoc service
@@ -1223,22 +1213,17 @@ tagsInput.factory('tiUtil', ["$timeout", "$q", function($timeout, $q) {
 
 /* HTML templates */
 tagsInput.run(["$templateCache", function($templateCache) {
-  'use strict';
-
-  $templateCache.put('ngTagsInput/tags-input.html',
+    $templateCache.put('ngTagsInput/tags-input.html',
     "<div class=\"host\" tabindex=\"-1\" ng-click=\"eventHandlers.host.click()\" ti-transclude-append><div class=\"tags\" ng-class=\"{focused: hasFocus}\"><ul class=\"tag-list\"><li class=\"tag-item\" ng-repeat=\"tag in tagList.items track by track(tag)\" ng-class=\"getTagClass(tag, $index)\" ng-click=\"eventHandlers.tag.click(tag)\"><ti-tag-item scope=\"templateScope\" data=\"::tag\"></ti-tag-item></li></ul><input id=\"{{newTag.inputFieldId}}\" class=\"input\" autocomplete=\"off\" ng-model=\"newTag.text\" ng-model-options=\"{getterSetter: true}\" ng-keydown=\"eventHandlers.input.keydown($event)\" ng-focus=\"eventHandlers.input.focus($event)\" ng-blur=\"eventHandlers.input.blur($event)\" ng-paste=\"eventHandlers.input.paste($event)\" ng-trim=\"false\" ng-class=\"{'invalid-tag': newTag.invalid}\" ng-disabled=\"disabled\" ti-bind-attrs=\"{type: options.type, placeholder: options.placeholder, tabindex: options.tabindex, spellcheck: options.spellcheck}\" ti-autosize></div></div>"
   );
-
 
   $templateCache.put('ngTagsInput/tag-item.html',
     "<span ng-bind=\"$getDisplayText()\"></span> <a class=\"remove-button\" ng-click=\"$removeTag()\" ng-bind=\"::$$removeTagSymbol\"></a>"
   );
 
-
   $templateCache.put('ngTagsInput/auto-complete.html',
     "<div class=\"autocomplete\" ng-if=\"suggestionList.visible\"><ul class=\"suggestion-list\"><li class=\"suggestion-item\" ng-repeat=\"item in suggestionList.items track by track(item)\" ng-class=\"getSuggestionClass(item, $index)\" ng-click=\"addSuggestionByIndex($index)\" ng-mouseenter=\"suggestionList.select($index)\"><ti-autocomplete-match scope=\"templateScope\" data=\"::item\"></ti-autocomplete-match></li></ul></div>"
   );
-
 
   $templateCache.put('ngTagsInput/auto-complete-match.html',
     "<span ng-bind-html=\"$highlight($getDisplayText())\"></span>"
